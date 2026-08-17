@@ -1,13 +1,18 @@
 import {useState} from "react";
 
-export const Input = ({quantity, setQuantity}) => {
+export const Input = ({quantity, setQuantity, setError}) => {
     const [count, setCount] = useState(0)
     const [inputValue, setInputValue] = useState(quantity)
 
     const onSubmitHandler = (event) => {
         event.preventDefault()
         setCount((prev) => prev + 1)
-        setQuantity(inputValue)
+        if (inputValue > 1 && inputValue <= 50) {
+            setQuantity(inputValue)
+            setError(null)
+        } else {
+            setError('Введите число от 1 до 50!')
+        }
     }
 
     const onChangeHandler = (event) => {

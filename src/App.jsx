@@ -37,10 +37,10 @@ function App() {
     return (
         <div className="App">
             <h1 className='title'>Галерея собак</h1>
-            <Input quantity={quantity} setQuantity={setQuantity} />
+            <Input quantity={quantity} setQuantity={setQuantity} setError={setError} />
             <Select setBreed={setBreed} setStatus={setStatus} status={status} setError={setError} />
             {status === 'loading' && <p>Loading...</p>}
-            {error && <p>{error}</p>}
+            {error && <p className='error'>{error}</p>}
             {status === 'success' && <Gallery images={images}/>}
         </div>
     )
