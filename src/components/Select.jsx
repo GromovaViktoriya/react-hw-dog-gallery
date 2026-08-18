@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import {baseUrl} from "../constants/constants.js";
 
 export const Select = ({setStatus, status, setBreed, setError}) => {
     const [optionsBreed, setOptionsBreed] = useState([]);
@@ -7,24 +8,28 @@ export const Select = ({setStatus, status, setBreed, setError}) => {
 
 
     useEffect(() => {
-        let cancelled = false
+        const controller = new AbortController()
 
         async function loadDogs() {
             setStatus('loading')
             try {
-                const response = await fetch(`https://dog.ceo/api/breeds/list/all`)
+                const response = await fetch(`${baseUrl}breeds/list/all`, { signal: controller.signal })
                 const data = await response.json()
-                setOptionsBreed(Object.keys(data.message))
+                setOptionsBreed(Object.keys(data.message).map(breed => {
+                   return {breed, id: crypto.randomUUID()}
+                }))
                 setStatus('success')
             } catch (error) {
-                if (!cancelled) setStatus('error')
-                setError(error.message)
+                if (error.name !== 'AbortError') {
+                    setStatus('error')
+                    setError(error.message)
+                }
             }
         }
 
         void loadDogs()
         return () => {
-            cancelled = true
+            controller.abort()
             setStatus('idle')
         }
     }, [])
@@ -37,8 +42,8 @@ export const Select = ({setStatus, status, setBreed, setError}) => {
     return (
         <div>
             {isSuccess && <select name="Порода" id="select" value={selectedBreed} onChange={onChangeHandler} className='select'>
-                {optionsBreed.map((breed, index) => (
-                    <option key={index}>{breed}</option>
+                {optionsBreed.map(option => (
+                    <option key={option.id}>{option.breed}</option>
                 ))}
                 </select>}
         </div>

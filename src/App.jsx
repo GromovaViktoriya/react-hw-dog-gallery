@@ -3,6 +3,8 @@ import './App.css'
 import {Gallery} from "./components/Gallery.jsx";
 import {Select} from "./components/Select.jsx";
 import {Input} from "./components/Input.jsx";
+import {baseUrl} from "./constants/constants.js";
+
 
 function App() {
     const [quantity, setQuantity] = useState(4)
@@ -12,24 +14,28 @@ function App() {
     const [error, setError] = useState(null)
 
     useEffect(() => {
-        let cancelled = false
+        const controller = new AbortController()
 
         async function loadDogs() {
             setStatus('loading')
             try {
-                const response = await fetch(`https://dog.ceo/api/breed/${breed}/images/random/${quantity}`)
+                const response = await fetch(`${baseUrl}breed/${breed}/images/random/${quantity}`, {signal: controller.signal})
                 const data = await response.json()
-                setImages(data.message)
+                setImages(data.message.map(image => {
+                    return {image, id: crypto.randomUUID()}
+                }))
                 setStatus('success')
             } catch (error) {
-                if (!cancelled) setStatus('error')
-                setError(error.message)
+                if (error.name !== 'AbortError') {
+                    setStatus('error')
+                    setError(error.message)
+                }
             }
         }
 
         void loadDogs()
         return () => {
-            cancelled = true
+           controller.abort()
             setStatus('idle')
         }
     }, [quantity, breed])
@@ -37,8 +43,8 @@ function App() {
     return (
         <div className="App">
             <h1 className='title'>Галерея собак</h1>
-            <Input quantity={quantity} setQuantity={setQuantity} setError={setError} />
-            <Select setBreed={setBreed} setStatus={setStatus} status={status} setError={setError} />
+            <Input quantity={quantity} setQuantity={setQuantity} setError={setError}/>
+            <Select setBreed={setBreed} setStatus={setStatus} status={status} setError={setError}/>
             {status === 'loading' && <p>Loading...</p>}
             {error && <p className='error'>{error}</p>}
             {status === 'success' && <Gallery images={images}/>}
